@@ -73,7 +73,9 @@ export default async function handler(req, res) {
     // Bot poll cờ
     const flag = await kvGet('reload_flag')
     console.log('[reload GET] flag from Redis:', JSON.stringify(flag))
-    if (flag && flag.pending === true) {
+    // pending có thể là boolean true hoặc string "true" tùy Redis serialize
+    const isPending = flag && (flag.pending === true || flag.pending === 'true')
+    if (isPending) {
       // KHÔNG reset ngay — bot tự reset sau khi load xong thành công
       return res.status(200).json({ reload: true })
     }
