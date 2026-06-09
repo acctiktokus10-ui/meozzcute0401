@@ -72,11 +72,12 @@ export default async function handler(req, res) {
 
     // Bot poll cờ
     const flag = await kvGet('reload_flag')
-    if (flag && flag.pending) {
+    console.log('[reload GET] flag from Redis:', JSON.stringify(flag))
+    if (flag && flag.pending === true) {
       // KHÔNG reset ngay — bot tự reset sau khi load xong thành công
       return res.status(200).json({ reload: true })
     }
-    return res.status(200).json({ reload: false })
+    return res.status(200).json({ reload: false, flag: flag })
   }
 
   return res.status(405).json({ error: 'Method not allowed' })
