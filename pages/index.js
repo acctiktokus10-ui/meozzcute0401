@@ -154,11 +154,11 @@ export default function Home() {
 
   if (!authed) return (
     <>
-      <Head><title>Zalo Bot</title></Head>
+      <Head><title>MeozzCute</title></Head>
       <div className="login-wrap">
         <div className="login-card">
           <div className="logo">🤖</div>
-          <h1>Zalo Bot</h1>
+          <h1>MeozzCute</h1>
           <p className="sub">Nhập mật khẩu để tiếp tục</p>
           <form onSubmit={handleLogin}>
             <input type="password" placeholder="Mật khẩu" value={password}
@@ -189,41 +189,26 @@ export default function Home() {
 
   return (
     <>
-      <Head><title>Zalo Bot</title></Head>
+      <Head><title>MeozzCute</title></Head>
       <div className="wrap">
         <header>
           <div className="inner">
             <div className="hd-left">
               <span className="logo">🤖</span>
-              <div><h1>Zalo Bot</h1><p>Quản lý dữ liệu</p></div>
+              <div><h1>MeozzCute</h1><p>Quản lý dữ liệu</p></div>
             </div>
             <button className="logout-btn" onClick={handleLogout}>Đăng xuất</button>
           </div>
         </header>
 
         <main>
-          {/* Status bar */}
-          <div className="status-bar">
-            <div className="status-item">
-              <span className="si-label">📦 Đơn hàng</span>
-              <span className="si-val">{status.donhang?.count > 0 ? `${status.donhang.count} sub_id` : 'Chưa có'}</span>
-              {status.donhang?.updated_at && <span className="si-date">{fmtDate(status.donhang.updated_at)}</span>}
-            </div>
-            <div className="status-divider" />
-            <div className="status-item">
-              <span className="si-label">💰 Ví tiền</span>
-              <span className="si-val">{status.vitien?.count > 0 ? `${status.vitien.count} sub_id` : 'Chưa có'}</span>
-              {status.vitien?.updated_at && <span className="si-date">{fmtDate(status.vitien.updated_at)}</span>}
-            </div>
-          </div>
-
           {/* CSV Import */}
           <div className="card csv-card">
             <div className="card-title">
               <span className="card-icon">📊</span>
               <div>
                 <h2>Import CSV Shopee Affiliate</h2>
-                <p>Chọn file báo cáo → tự động tạo dữ liệu đơn hàng & ví tiền</p>
+                <p>Import CSV Shopee Affiliate — nhắn cho Meozz (0397088175) hướng dẫn lấy file CSV nếu bạn chưa biết</p>
               </div>
             </div>
 
@@ -283,9 +268,8 @@ export default function Home() {
             <h3>📋 Quy trình mỗi ngày</h3>
             <div className="steps">
               <div className="step"><span className="num">1</span><span>Chọn file CSV Shopee → bấm <b>Tạo 2 file JSON</b></span></div>
-              <div className="step"><span className="num">2</span><span>Kiểm tra số liệu → bấm <b>Update Now</b> để upload lên Redis</span></div>
-              <div className="step"><span className="num">3</span><span>Bấm <b>Tải dữ liệu lên Bot ngay</b> — bot đọc và lưu vào bộ nhớ</span></div>
-              <div className="step"><span className="num">4</span><span>Khách nhắn <code>#donhang</code> hoặc <code>#vitien</code> — bot trả dữ liệu mới nhất</span></div>
+              <div className="step"><span className="num">2</span><span>Kiểm tra số liệu → bấm <b>Update Now</b> để upload</span></div>
+              <div className="step"><span className="num">3</span><span>Bấm <b>Tải dữ liệu lên Bot ngay</b> — <b>HOÀN THÀNH</b></span></div>
             </div>
           </div>
         </main>
