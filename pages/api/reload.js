@@ -1,6 +1,6 @@
 // pages/api/reload.js
-// Web bấm nút → POST /api/reload (có password) → set cờ reload=true
-// Bot poll GET /api/reload → nếu cờ=true thì fetch data mới, xong reset cờ
+// Web bấm nút → POST /api/reload → set cờ pending=true
+// Bot poll GET /api/reload → nếu pending → load data → ghi kết quả lại → web poll thấy kết quả
 
 const PASSWORD = process.env.UPLOAD_PASSWORD || 'hoantien9999'
 let _store = {}
@@ -11,9 +11,13 @@ async function kvGet(key) {
     const res = await fetch(url, { headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` } })
     if (!res.ok) return null
     const json = await res.json()
-    return json.result ?? null
+    let result = json.result ?? null
+    if (typeof result === 'string') { try { result = JSON.parse(result) } catch { return null } }
+    return result
   }
-  return _store[key] ?? null
+  const raw = _store[key] ?? null
+  if (typeof raw === 'string') { try { return JSON.parse(raw) } catch { return null } }
+  return raw
 }
 
 async function kvSet(key, value) {
@@ -22,28 +26,54 @@ async function kvSet(key, value) {
     const res = await fetch(url, {
       method: 'POST',
       headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(value),
+      body: JSON.stringify(typeof value === 'string' ? value : JSON.stringify(value)),
     })
     return res.ok
   }
-  _store[key] = value
+  _store[key] = typeof value === 'string' ? value : JSON.stringify(value)
   return true
 }
 
 export default async function handler(req, res) {
-  // POST — web bấm nút → set cờ reload
+
+  // POST — web bấm nút → set cờ reload + xóa kết quả cũ
   if (req.method === 'POST') {
-    const { password } = req.body
+    const { password, poll_result, pending } = req.body
+
+    // Bot ghi kết quả reload lên (internal call, không cần password)
+    if (poll_result !== undefined) {
+      await kvSet('reload_status', poll_result)
+      return res.status(200).json({ success: true })
+    }
+
+    // [FIX] Bot reset cờ pending sau khi load xong (internal call, không cần password)
+    if (pending === false) {
+      await kvSet('reload_flag', { pending: false, reset_at: new Date().toISOString() })
+      return res.status(200).json({ success: true })
+    }
+
     if (password !== PASSWORD) return res.status(401).json({ error: 'Sai mật khẩu' })
+
+    // Xóa kết quả cũ, set cờ pending
+    await kvSet('reload_status', { state: 'pending', requested_at: new Date().toISOString() })
     await kvSet('reload_flag', { pending: true, requested_at: new Date().toISOString() })
     return res.status(200).json({ success: true, message: 'Đã gửi lệnh tải dữ liệu cho bot' })
   }
 
-  // GET — bot poll: lấy cờ + reset
+  // GET — bot poll cờ (không reset ngay, bot tự reset sau khi load xong)
   if (req.method === 'GET') {
+    const { poll_status } = req.query
+
+    // Web poll kết quả (poll_status=1)
+    if (poll_status === '1') {
+      const status = await kvGet('reload_status')
+      return res.status(200).json(status || { state: 'unknown' })
+    }
+
+    // Bot poll cờ
     const flag = await kvGet('reload_flag')
     if (flag && flag.pending) {
-      await kvSet('reload_flag', { pending: false, done_at: new Date().toISOString() })
+      // KHÔNG reset ngay — bot tự reset sau khi load xong thành công
       return res.status(200).json({ reload: true })
     }
     return res.status(200).json({ reload: false })
