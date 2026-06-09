@@ -1,6 +1,197 @@
 import { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
 
+// ── FLOATING CHARACTERS ──
+const CHARACTERS = [
+  // Hello Kitty
+  { id: 'hk', render: (size=48) => (
+    <svg viewBox="0 0 100 100" width={size} height={size} xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="55" rx="36" ry="34" fill="#fff" stroke="#b8d4f0" strokeWidth="2"/>
+      <ellipse cx="22" cy="28" rx="11" ry="13" fill="#fff" stroke="#b8d4f0" strokeWidth="2"/>
+      <ellipse cx="78" cy="28" rx="11" ry="13" fill="#fff" stroke="#b8d4f0" strokeWidth="2"/>
+      <ellipse cx="22" cy="28" rx="6" ry="8" fill="#ffc8d8"/>
+      <ellipse cx="78" cy="28" rx="6" ry="8" fill="#ffc8d8"/>
+      <ellipse cx="38" cy="54" rx="5" ry="6" fill="#1a1a1a"/>
+      <ellipse cx="62" cy="54" rx="5" ry="6" fill="#1a1a1a"/>
+      <circle cx="40" cy="52" r="2" fill="#fff"/>
+      <circle cx="64" cy="52" r="2" fill="#fff"/>
+      <ellipse cx="50" cy="64" rx="3" ry="2" fill="#ffb7c5"/>
+      <line x1="16" y1="62" x2="44" y2="66" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="16" y1="68" x2="44" y2="68" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="56" y1="66" x2="84" y2="62" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="56" y1="68" x2="84" y2="68" stroke="#ccc" strokeWidth="1.5"/>
+      <polygon points="60,30 72,24 72,36" fill="#7ec8f0"/>
+      <polygon points="84,30 72,24 72,36" fill="#5ab0e0"/>
+      <circle cx="72" cy="30" r="4" fill="#4a9fd0"/>
+    </svg>
+  )},
+  // Bunny
+  { id: 'bunny', render: (size=48) => (
+    <svg viewBox="0 0 100 110" width={size} height={size} xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="28" cy="22" rx="8" ry="20" fill="#e8f4ff" stroke="#b8d4f0" strokeWidth="1.5"/>
+      <ellipse cx="72" cy="22" rx="8" ry="20" fill="#e8f4ff" stroke="#b8d4f0" strokeWidth="1.5"/>
+      <ellipse cx="28" cy="22" rx="4" ry="15" fill="#ffc8d8"/>
+      <ellipse cx="72" cy="22" rx="4" ry="15" fill="#ffc8d8"/>
+      <ellipse cx="50" cy="65" rx="34" ry="32" fill="#e8f4ff" stroke="#b8d4f0" strokeWidth="2"/>
+      <ellipse cx="38" cy="62" rx="5" ry="6" fill="#1a1a1a"/>
+      <ellipse cx="62" cy="62" rx="5" ry="6" fill="#1a1a1a"/>
+      <circle cx="40" cy="60" r="2" fill="#fff"/>
+      <circle cx="64" cy="60" r="2" fill="#fff"/>
+      <ellipse cx="50" cy="73" rx="4" ry="3" fill="#ffc8d8"/>
+      <path d="M46,76 Q50,80 54,76" stroke="#999" strokeWidth="1.5" fill="none"/>
+      <line x1="20" y1="70" x2="44" y2="74" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="20" y1="76" x2="44" y2="76" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="56" y1="74" x2="80" y2="70" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="56" y1="76" x2="80" y2="76" stroke="#ccc" strokeWidth="1.5"/>
+    </svg>
+  )},
+  // Cat
+  { id: 'cat', render: (size=48) => (
+    <svg viewBox="0 0 100 100" width={size} height={size} xmlns="http://www.w3.org/2000/svg">
+      <polygon points="18,38 10,12 36,30" fill="#aed6f1" stroke="#7fb3d6" strokeWidth="1.5"/>
+      <polygon points="82,38 90,12 64,30" fill="#aed6f1" stroke="#7fb3d6" strokeWidth="1.5"/>
+      <polygon points="22,38 16,20 38,32" fill="#ffc8d8"/>
+      <polygon points="78,38 84,20 62,32" fill="#ffc8d8"/>
+      <ellipse cx="50" cy="58" rx="36" ry="33" fill="#aed6f1" stroke="#7fb3d6" strokeWidth="2"/>
+      <ellipse cx="37" cy="55" rx="7" ry="8" fill="#1a1a1a"/>
+      <ellipse cx="63" cy="55" rx="7" ry="8" fill="#1a1a1a"/>
+      <ellipse cx="37" cy="55" rx="4" ry="6" fill="#2ecc71"/>
+      <circle cx="38" cy="53" r="1.5" fill="#fff"/>
+      <ellipse cx="63" cy="55" rx="4" ry="6" fill="#2ecc71"/>
+      <circle cx="64" cy="53" r="1.5" fill="#fff"/>
+      <ellipse cx="50" cy="65" rx="3.5" ry="2.5" fill="#ffc8d8"/>
+      <path d="M46,68 Q50,73 54,68" stroke="#888" strokeWidth="1.5" fill="none"/>
+      <line x1="14" y1="63" x2="44" y2="67" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="14" y1="69" x2="44" y2="69" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="56" y1="67" x2="86" y2="63" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="56" y1="69" x2="86" y2="69" stroke="#ccc" strokeWidth="1.5"/>
+    </svg>
+  )},
+  // Dog
+  { id: 'dog', render: (size=48) => (
+    <svg viewBox="0 0 100 105" width={size} height={size} xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="20" cy="40" rx="14" ry="10" fill="#d4a96a" stroke="#b8925a" strokeWidth="1.5" transform="rotate(-20,20,40)"/>
+      <ellipse cx="80" cy="40" rx="14" ry="10" fill="#d4a96a" stroke="#b8925a" strokeWidth="1.5" transform="rotate(20,80,40)"/>
+      <ellipse cx="50" cy="58" rx="36" ry="33" fill="#f0c880" stroke="#d4a96a" strokeWidth="2"/>
+      <ellipse cx="37" cy="53" rx="6" ry="7" fill="#1a1a1a"/>
+      <ellipse cx="63" cy="53" rx="6" ry="7" fill="#1a1a1a"/>
+      <circle cx="38" cy="51" r="2" fill="#fff"/>
+      <circle cx="64" cy="51" r="2" fill="#fff"/>
+      <ellipse cx="50" cy="68" rx="10" ry="7" fill="#e8b060"/>
+      <ellipse cx="50" cy="67" rx="4" ry="3" fill="#c0746a"/>
+      <path d="M44,70 Q50,76 56,70" stroke="#888" strokeWidth="1.5" fill="none"/>
+      <line x1="16" y1="61" x2="42" y2="65" stroke="#bbb" strokeWidth="1.5"/>
+      <line x1="16" y1="67" x2="42" y2="67" stroke="#bbb" strokeWidth="1.5"/>
+      <line x1="58" y1="65" x2="84" y2="61" stroke="#bbb" strokeWidth="1.5"/>
+      <line x1="58" y1="67" x2="84" y2="67" stroke="#bbb" strokeWidth="1.5"/>
+    </svg>
+  )},
+  // Squirrel
+  { id: 'squirrel', render: (size=48) => (
+    <svg viewBox="0 0 100 115" width={size} height={size} xmlns="http://www.w3.org/2000/svg">
+      <path d="M70,100 Q95,60 88,30 Q80,10 65,25 Q75,40 68,55 Q72,70 70,100" fill="#c07840" stroke="#a06030" strokeWidth="1.5"/>
+      <ellipse cx="20" cy="28" rx="9" ry="11" fill="#c07840" stroke="#a06030" strokeWidth="1.5"/>
+      <ellipse cx="80" cy="28" rx="9" ry="11" fill="#c07840" stroke="#a06030" strokeWidth="1.5"/>
+      <ellipse cx="20" cy="28" rx="5" ry="7" fill="#e8a060"/>
+      <ellipse cx="80" cy="28" rx="5" ry="7" fill="#e8a060"/>
+      <ellipse cx="50" cy="60" rx="32" ry="30" fill="#c07840" stroke="#a06030" strokeWidth="2"/>
+      <ellipse cx="50" cy="68" rx="20" ry="14" fill="#e8b880"/>
+      <ellipse cx="38" cy="55" rx="5" ry="6" fill="#1a1a1a"/>
+      <ellipse cx="62" cy="55" rx="5" ry="6" fill="#1a1a1a"/>
+      <circle cx="39" cy="53" r="1.8" fill="#fff"/>
+      <circle cx="63" cy="53" r="1.8" fill="#fff"/>
+      <ellipse cx="50" cy="65" rx="3" ry="2" fill="#e88060"/>
+      <path d="M46,68 Q50,73 54,68" stroke="#888" strokeWidth="1.5" fill="none"/>
+    </svg>
+  )},
+]
+
+function FloatingChar({ char, initialX, initialY, size, delay }) {
+  const [pos, setPos] = useState({ x: initialX, y: initialY })
+  const [jumping, setJumping] = useState(false)
+  const [bobOffset, setBobOffset] = useState(0)
+  const animRef = useRef()
+  const timeRef = useRef(0)
+
+  useEffect(() => {
+    let start = null
+    const bob = (ts) => {
+      if (!start) start = ts
+      const t = (ts - start) / 1000
+      setBobOffset(Math.sin(t * 1.5 + delay) * 6)
+      animRef.current = requestAnimationFrame(bob)
+    }
+    animRef.current = requestAnimationFrame(bob)
+    return () => cancelAnimationFrame(animRef.current)
+  }, [delay])
+
+  function handleClick(e) {
+    e.stopPropagation()
+    if (jumping) return
+    setJumping(true)
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const newX = Math.random() * (vw - size - 20)
+    const newY = Math.random() * (vh - size - 20)
+    setPos({ x: newX, y: newY })
+    setTimeout(() => setJumping(false), 500)
+  }
+
+  return (
+    <div
+      onClick={handleClick}
+      style={{
+        position: 'fixed',
+        left: pos.x,
+        top: pos.y + bobOffset,
+        cursor: 'pointer',
+        zIndex: 5,
+        transition: jumping ? 'left 0.45s cubic-bezier(0.34,1.56,0.64,1), top 0.45s cubic-bezier(0.34,1.56,0.64,1)' : 'none',
+        filter: 'drop-shadow(0 2px 4px rgba(100,160,220,0.3))',
+        userSelect: 'none',
+        transform: jumping ? 'scale(1.25) rotate(15deg)' : 'scale(1)',
+        transitionProperty: jumping ? 'left,top,transform' : 'transform',
+      }}
+      title="Click mình nè! 🐾"
+    >
+      {char.render(size)}
+    </div>
+  )
+}
+
+function FloatingLayer() {
+  const [items] = useState(() => {
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1200
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 800
+    const configs = [
+      { char: CHARACTERS[0], size: 44, x: vw * 0.05, y: vh * 0.15, delay: 0 },
+      { char: CHARACTERS[1], size: 38, x: vw * 0.88, y: vh * 0.20, delay: 1.2 },
+      { char: CHARACTERS[2], size: 40, x: vw * 0.04, y: vh * 0.65, delay: 0.7 },
+      { char: CHARACTERS[3], size: 42, x: vw * 0.90, y: vh * 0.70, delay: 1.8 },
+      { char: CHARACTERS[4], size: 36, x: vw * 0.50, y: vh * 0.05, delay: 0.4 },
+      { char: CHARACTERS[0], size: 32, x: vw * 0.15, y: vh * 0.40, delay: 2.1 },
+      { char: CHARACTERS[1], size: 34, x: vw * 0.80, y: vh * 0.45, delay: 0.9 },
+      { char: CHARACTERS[2], size: 30, x: vw * 0.60, y: vh * 0.80, delay: 1.5 },
+    ]
+    return configs
+  })
+
+  return (
+    <>
+      {items.map((item, i) => (
+        <FloatingChar
+          key={i}
+          char={item.char}
+          initialX={item.x}
+          initialY={item.y}
+          size={item.size}
+          delay={item.delay}
+        />
+      ))}
+    </>
+  )
+}
+
 export default function Home() {
   const [password, setPassword] = useState('')
   const [authed, setAuthed] = useState(false)
@@ -17,12 +208,14 @@ export default function Home() {
   const csvRef = useRef()
   const [loginLoading, setLoginLoading] = useState(false)
   const [loginError, setLoginError] = useState('')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
     const p = localStorage.getItem('zalo_pwd')
     if (p) {
       setPassword(p)
-      // Xác thực lại với server
       fetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -30,7 +223,7 @@ export default function Home() {
       }).then(res => {
         if (res.status !== 401) { setAuthed(true) }
         else { localStorage.removeItem('zalo_pwd') }
-      }).catch(() => { setAuthed(true) }) // offline -> cho vào
+      }).catch(() => { setAuthed(true) })
     }
   }, [])
 
@@ -152,39 +345,36 @@ export default function Home() {
   const donhangCount = csvResult ? Object.keys(csvResult.donhang).length : 0
   const vitienCount  = csvResult ? Object.keys(csvResult.vitien).length  : 0
 
+  const KittyLogo = ({ size = 72 }) => (
+    <svg viewBox="0 0 100 100" width={size} height={size} xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="48" fill="#fff" stroke="#b8d4f0" strokeWidth="3"/>
+      <ellipse cx="50" cy="52" rx="34" ry="32" fill="#fff"/>
+      <ellipse cx="22" cy="26" rx="10" ry="12" fill="#fff" stroke="#b8d4f0" strokeWidth="2"/>
+      <ellipse cx="78" cy="26" rx="10" ry="12" fill="#fff" stroke="#b8d4f0" strokeWidth="2"/>
+      <ellipse cx="22" cy="26" rx="5" ry="7" fill="#c8e0f8"/>
+      <ellipse cx="78" cy="26" rx="5" ry="7" fill="#c8e0f8"/>
+      <ellipse cx="38" cy="50" rx="6" ry="7" fill="#1a1a1a"/>
+      <ellipse cx="62" cy="50" rx="6" ry="7" fill="#1a1a1a"/>
+      <circle cx="40" cy="48" r="2" fill="#fff"/>
+      <circle cx="64" cy="48" r="2" fill="#fff"/>
+      <ellipse cx="50" cy="60" rx="3" ry="2" fill="#c8e0f8"/>
+      <line x1="14" y1="58" x2="42" y2="62" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="14" y1="63" x2="42" y2="65" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="58" y1="62" x2="86" y2="58" stroke="#ccc" strokeWidth="1.5"/>
+      <line x1="58" y1="65" x2="86" y2="63" stroke="#ccc" strokeWidth="1.5"/>
+      <polygon points="58,28 70,22 70,34" fill="#7ec8f0"/>
+      <polygon points="82,28 70,22 70,34" fill="#5ab0e0"/>
+      <circle cx="70" cy="28" r="4" fill="#4a9fd0"/>
+    </svg>
+  )
+
   if (!authed) return (
     <>
-      <Head><title>MeozzCute</title></Head>
+      <Head><title>MeozzCute 🎀</title></Head>
+      {mounted && <FloatingLayer />}
       <div className="login-wrap">
         <div className="login-card">
-          <div className="logo">
-            <svg viewBox="0 0 100 100" width="72" height="72" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="50" cy="50" r="48" fill="#fff" stroke="#ffb7c5" strokeWidth="3"/>
-              {/* Head */}
-              <ellipse cx="50" cy="52" rx="34" ry="32" fill="#fff"/>
-              {/* Ears */}
-              <ellipse cx="22" cy="26" rx="10" ry="12" fill="#fff" stroke="#ffb7c5" strokeWidth="2"/>
-              <ellipse cx="78" cy="26" rx="10" ry="12" fill="#fff" stroke="#ffb7c5" strokeWidth="2"/>
-              <ellipse cx="22" cy="26" rx="5" ry="7" fill="#ffb7c5"/>
-              <ellipse cx="78" cy="26" rx="5" ry="7" fill="#ffb7c5"/>
-              {/* Eyes */}
-              <ellipse cx="38" cy="50" rx="6" ry="7" fill="#1a1a1a"/>
-              <ellipse cx="62" cy="50" rx="6" ry="7" fill="#1a1a1a"/>
-              <circle cx="40" cy="48" r="2" fill="#fff"/>
-              <circle cx="64" cy="48" r="2" fill="#fff"/>
-              {/* Nose */}
-              <ellipse cx="50" cy="60" rx="3" ry="2" fill="#ffb7c5"/>
-              {/* Whiskers */}
-              <line x1="14" y1="58" x2="42" y2="62" stroke="#ccc" strokeWidth="1.5"/>
-              <line x1="14" y1="63" x2="42" y2="65" stroke="#ccc" strokeWidth="1.5"/>
-              <line x1="58" y1="62" x2="86" y2="58" stroke="#ccc" strokeWidth="1.5"/>
-              <line x1="58" y1="65" x2="86" y2="63" stroke="#ccc" strokeWidth="1.5"/>
-              {/* Bow */}
-              <polygon points="58,28 70,22 70,34" fill="#ff6b9d"/>
-              <polygon points="82,28 70,22 70,34" fill="#ff6b9d"/>
-              <circle cx="70" cy="28" r="4" fill="#ff3d7f"/>
-            </svg>
-          </div>
+          <div className="logo"><KittyLogo size={72} /></div>
           <h1>MeozzCute 🎀</h1>
           <p className="sub">Nhập mật khẩu để tiếp tục</p>
           <form onSubmit={handleLogin}>
@@ -192,23 +382,26 @@ export default function Home() {
               onChange={e => { setPassword(e.target.value); setLoginError('') }} autoFocus required />
             {loginError && <p className="login-err">{loginError}</p>}
             <button type="submit" disabled={loginLoading}>
-              {loginLoading ? '⏳ Đang kiểm tra...' : 'Đăng nhập'}
+              {loginLoading ? '⏳ Đang kiểm tra...' : '✨ Đăng nhập'}
             </button>
           </form>
+          <p className="hint-tip">💡 Nhấn vào các nhân vật để chúng nhảy!</p>
         </div>
       </div>
       <style>{`
         *{box-sizing:border-box;margin:0;padding:0}
-        body{background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
-        .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#fff0f6,#fce4ec,#f8f0ff)}
-        .login-card{background:#fff;border-radius:24px;padding:48px 36px;width:100%;max-width:380px;text-align:center;box-shadow:0 8px 32px rgba(255,105,180,0.15);border:1px solid #ffe4f0}
+        body{background:linear-gradient(135deg,#e8f4ff,#f0f8ff,#e4f0ff);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh}
+        .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#e8f4ff,#f0f8ff,#ddeeff)}
+        .login-card{background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);border-radius:24px;padding:48px 36px;width:100%;max-width:380px;text-align:center;box-shadow:0 8px 32px rgba(100,160,220,0.18);border:1px solid #c8e0f8;position:relative;z-index:10}
         .logo{font-size:48px;margin-bottom:12px;display:flex;justify-content:center}
-        h1{color:#d63384;font-size:24px;font-weight:700;margin-bottom:6px}
-        .sub{color:#f48fb1;font-size:14px;margin-bottom:28px}
-        input{width:100%;padding:14px 16px;background:#fff0f6;border:1.5px solid #ffb7c5;border-radius:12px;color:#1e293b;font-size:15px;margin-bottom:14px;outline:none}
-        input:focus{border-color:#d63384}
-        button{width:100%;padding:14px;background:linear-gradient(135deg,#ff6b9d,#d63384);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+        h1{color:#2d7cc7;font-size:24px;font-weight:700;margin-bottom:6px}
+        .sub{color:#6aabde;font-size:14px;margin-bottom:28px}
+        .hint-tip{color:#90c4e8;font-size:12px;margin-top:18px}
+        input{width:100%;padding:14px 16px;background:#f0f8ff;border:1.5px solid #b8d4f0;border-radius:12px;color:#1e293b;font-size:15px;margin-bottom:14px;outline:none}
+        input:focus{border-color:#4a9fd0;box-shadow:0 0 0 3px rgba(74,159,208,0.12)}
+        button{width:100%;padding:14px;background:linear-gradient(135deg,#5ab0e0,#2d7cc7);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s}
         button:disabled{opacity:.6;cursor:not-allowed}
+        button:not(:disabled):hover{opacity:.88}
         .login-err{color:#dc2626;font-size:13px;margin-bottom:12px;background:#fef2f2;padding:10px;border-radius:8px;border:1px solid #fecaca}
       `}</style>
     </>
@@ -216,33 +409,13 @@ export default function Home() {
 
   return (
     <>
-      <Head><title>MeozzCute</title></Head>
+      <Head><title>MeozzCute 🎀</title></Head>
+      {mounted && <FloatingLayer />}
       <div className="wrap">
         <header>
           <div className="inner">
             <div className="hd-left">
-              <span className="logo">
-                <svg viewBox="0 0 100 100" width="38" height="38" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="50" cy="50" r="48" fill="#fff" stroke="#ffb7c5" strokeWidth="3"/>
-                  <ellipse cx="50" cy="52" rx="34" ry="32" fill="#fff"/>
-                  <ellipse cx="22" cy="26" rx="10" ry="12" fill="#fff" stroke="#ffb7c5" strokeWidth="2"/>
-                  <ellipse cx="78" cy="26" rx="10" ry="12" fill="#fff" stroke="#ffb7c5" strokeWidth="2"/>
-                  <ellipse cx="22" cy="26" rx="5" ry="7" fill="#ffb7c5"/>
-                  <ellipse cx="78" cy="26" rx="5" ry="7" fill="#ffb7c5"/>
-                  <ellipse cx="38" cy="50" rx="6" ry="7" fill="#1a1a1a"/>
-                  <ellipse cx="62" cy="50" rx="6" ry="7" fill="#1a1a1a"/>
-                  <circle cx="40" cy="48" r="2" fill="#fff"/>
-                  <circle cx="64" cy="48" r="2" fill="#fff"/>
-                  <ellipse cx="50" cy="60" rx="3" ry="2" fill="#ffb7c5"/>
-                  <line x1="14" y1="58" x2="42" y2="62" stroke="#ccc" strokeWidth="1.5"/>
-                  <line x1="14" y1="63" x2="42" y2="65" stroke="#ccc" strokeWidth="1.5"/>
-                  <line x1="58" y1="62" x2="86" y2="58" stroke="#ccc" strokeWidth="1.5"/>
-                  <line x1="58" y1="65" x2="86" y2="63" stroke="#ccc" strokeWidth="1.5"/>
-                  <polygon points="58,28 70,22 70,34" fill="#ff6b9d"/>
-                  <polygon points="82,28 70,22 70,34" fill="#ff6b9d"/>
-                  <circle cx="70" cy="28" r="4" fill="#ff3d7f"/>
-                </svg>
-              </span>
+              <span className="logo"><KittyLogo size={38} /></span>
               <div><h1>MeozzCute 🎀</h1><p>✨ Quản lý dữ liệu</p></div>
             </div>
             <button className="logout-btn" onClick={handleLogout}>Đăng xuất</button>
@@ -325,85 +498,77 @@ export default function Home() {
 
       <style>{`
         *{box-sizing:border-box;margin:0;padding:0}
-        body{background:linear-gradient(135deg,#fff0f6,#fce4ec,#f8f0ff);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;color:#1e293b}
+        body{background:linear-gradient(135deg,#e8f4ff,#f0f8ff,#ddeeff);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;color:#1e293b}
         .wrap{min-height:100vh;padding-bottom:48px}
 
-        header{background:linear-gradient(135deg,#fff0f6,#ffe4f0);border-bottom:1px solid #ffb7c5;padding:0 20px;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(255,105,180,0.12)}
+        header{background:rgba(240,248,255,0.92);backdrop-filter:blur(10px);border-bottom:1px solid #c8e0f8;padding:0 20px;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(100,160,220,0.12)}
         .inner{max-width:680px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:60px}
         .hd-left{display:flex;align-items:center;gap:10px}
         .logo{font-size:26px;display:flex;align-items:center}
-        h1{font-size:17px;font-weight:700;color:#d63384}
-        header p{font-size:12px;color:#f48fb1}
-        .logout-btn{background:#fff0f6;border:1px solid #ffb7c5;border-radius:8px;padding:7px 14px;color:#d63384;font-size:13px;cursor:pointer}
-        .logout-btn:hover{background:#ffe4f0}
+        h1{font-size:17px;font-weight:700;color:#2d7cc7}
+        header p{font-size:12px;color:#6aabde}
+        .logout-btn{background:#f0f8ff;border:1px solid #b8d4f0;border-radius:8px;padding:7px 14px;color:#2d7cc7;font-size:13px;cursor:pointer;transition:background .2s}
+        .logout-btn:hover{background:#ddeeff}
 
-        main{max-width:680px;margin:0 auto;padding:24px 16px;display:flex;flex-direction:column;gap:16px}
+        main{max-width:680px;margin:0 auto;padding:24px 16px;display:flex;flex-direction:column;gap:16px;position:relative;z-index:10}
 
-        /* Status bar */
-        .status-bar{background:#fff;border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:0;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid #e2e8f0}
+        .status-bar{background:#fff;border-radius:16px;padding:16px 20px;display:flex;align-items:center;gap:0;box-shadow:0 1px 4px rgba(0,0,0,0.06);border:1px solid #c8e0f8}
         .status-item{flex:1;display:flex;flex-direction:column;gap:3px}
         .si-label{font-size:13px;color:#64748b}
-        .si-val{font-size:16px;font-weight:700;color:#0ea5e9}
+        .si-val{font-size:16px;font-weight:700;color:#2d7cc7}
         .si-date{font-size:11px;color:#94a3b8}
-        .status-divider{width:1px;height:40px;background:#e2e8f0;margin:0 16px}
+        .status-divider{width:1px;height:40px;background:#c8e0f8;margin:0 16px}
 
-        /* Cards */
-        .card{background:#fff;border-radius:20px;padding:22px;box-shadow:0 2px 12px rgba(255,105,180,0.1);border:1px solid #ffe4f0}
+        .card{background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);border-radius:20px;padding:22px;box-shadow:0 2px 12px rgba(100,160,220,0.12);border:1px solid #d8ecf8}
         .card-title{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
         .card-icon{font-size:26px;flex-shrink:0}
-        .card-title h2{font-size:15px;font-weight:700;color:#d63384;margin-bottom:3px}
+        .card-title h2{font-size:15px;font-weight:700;color:#2d7cc7;margin-bottom:3px}
         .card-title p{font-size:13px;color:#64748b;line-height:1.5}
 
-        /* CSV card accent */
-        .csv-card{border-top:3px solid #ff6b9d}
-        .reload-card{border-top:3px solid #f472b6}
+        .csv-card{border-top:3px solid #5ab0e0}
+        .reload-card{border-top:3px solid #4a9fd0}
 
-        /* File row */
         .file-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
-        .btn-choose{background:#fff0f6;border:1.5px dashed #ffb7c5;border-radius:10px;padding:10px 18px;color:#d63384;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
-        .btn-choose:hover{background:#ffe4f0;border-color:#ff6b9d}
+        .btn-choose{background:#f0f8ff;border:1.5px dashed #b8d4f0;border-radius:10px;padding:10px 18px;color:#2d7cc7;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
+        .btn-choose:hover{background:#ddeeff;border-color:#5ab0e0}
         .file-name{font-size:13px;color:#059669;font-weight:500}
         .file-hint{font-size:13px;color:#94a3b8}
 
-        /* Preview */
         .preview-row{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
-        .preview-box{flex:1;min-width:120px;background:#fff0f6;border:1px solid #ffb7c5;border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:4px}
+        .preview-box{flex:1;min-width:120px;background:#f0f8ff;border:1px solid #b8d4f0;border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:4px}
         .preview-box span{font-size:12px;color:#64748b}
-        .preview-box strong{font-size:20px;font-weight:700;color:#d63384}
+        .preview-box strong{font-size:20px;font-weight:700;color:#2d7cc7}
 
-        /* Buttons */
         .btn-row{display:flex;gap:10px;flex-wrap:wrap}
-        .btn-process{flex:1;min-width:130px;padding:12px;background:#fff0f6;border:1.5px solid #ffb7c5;border-radius:12px;color:#d63384;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
-        .btn-process:not(:disabled):hover{background:#ffe4f0}
+        .btn-process{flex:1;min-width:130px;padding:12px;background:#f0f8ff;border:1.5px solid #b8d4f0;border-radius:12px;color:#2d7cc7;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+        .btn-process:not(:disabled):hover{background:#ddeeff}
         .btn-process:disabled{opacity:.4;cursor:not-allowed}
-        .btn-update{flex:1;min-width:130px;padding:12px;background:linear-gradient(135deg,#ff6b9d,#d63384);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 2px 8px rgba(214,51,132,.3)}
+        .btn-update{flex:1;min-width:130px;padding:12px;background:linear-gradient(135deg,#5ab0e0,#2d7cc7);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 2px 8px rgba(45,124,199,.28)}
         .btn-update:not(:disabled):hover{opacity:.88}
         .btn-update:disabled{opacity:.35;cursor:not-allowed}
-        .btn-reload{width:100%;padding:13px;background:linear-gradient(135deg,#f472b6,#ec4899);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 2px 8px rgba(244,114,182,.3)}
+        .btn-reload{width:100%;padding:13px;background:linear-gradient(135deg,#4a9fd0,#2d7cc7);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 2px 8px rgba(74,159,208,.28)}
         .btn-reload:not(:disabled):hover{opacity:.88}
         .btn-reload:disabled{opacity:.5;cursor:not-allowed}
         .btn-reload.loading{animation:pulse 1.2s ease-in-out infinite}
         @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
 
-        /* Messages */
         .msg{margin-top:12px;border-radius:10px;padding:10px 14px;font-size:13px}
         .msg.ok{background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0}
         .msg.err{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}
 
-        /* Guide */
-        .guide{background:#fff;border-radius:20px;padding:22px;box-shadow:0 2px 12px rgba(255,105,180,0.1);border:1px solid #ffe4f0}
-        .guide h3{font-size:14px;font-weight:600;color:#d63384;margin-bottom:16px}
+        .guide{background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);border-radius:20px;padding:22px;box-shadow:0 2px 12px rgba(100,160,220,0.12);border:1px solid #d8ecf8}
+        .guide h3{font-size:14px;font-weight:600;color:#2d7cc7;margin-bottom:16px}
         .steps{display:flex;flex-direction:column;gap:12px}
         .step{display:flex;align-items:flex-start;gap:12px;font-size:14px;color:#475569;line-height:1.5}
-        .num{background:#ffe4f0;color:#d63384;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
-        code{background:#fff0f6;padding:2px 6px;border-radius:5px;font-size:12px;font-family:monospace;color:#d63384}
-        b{color:#d63384}
+        .num{background:#ddeeff;color:#2d7cc7;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+        code{background:#f0f8ff;padding:2px 6px;border-radius:5px;font-size:12px;font-family:monospace;color:#2d7cc7}
+        b{color:#2d7cc7}
       `}</style>
     </>
   )
 }
 
-// ── XỬ LÝ CSV PHÍA CLIENT — không giới hạn kích thước file ──
+// ── XỬ LÝ CSV PHÍA CLIENT ──
 function parseCSVLine(line) {
   const result = []; let cur = '', inQuote = false
   for (let i = 0; i < line.length; i++) {
