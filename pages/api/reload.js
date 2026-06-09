@@ -12,12 +12,18 @@ async function kvGet(key) {
     if (!res.ok) return null
     const json = await res.json()
     let result = json.result ?? null
-    if (typeof result === 'string') { try { result = JSON.parse(result) } catch { return null } }
+    // Parse nhiều lần cho đến khi ra object (tránh double-stringify)
+    while (typeof result === 'string') {
+      try { result = JSON.parse(result) } catch { break }
+    }
     return result
   }
   const raw = _store[key] ?? null
-  if (typeof raw === 'string') { try { return JSON.parse(raw) } catch { return null } }
-  return raw
+  let result = raw
+  while (typeof result === 'string') {
+    try { result = JSON.parse(result) } catch { break }
+  }
+  return result
 }
 
 async function kvSet(key, value) {
