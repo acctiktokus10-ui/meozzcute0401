@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Head from 'next/head'
 
 export default function Home() {
@@ -10,6 +10,15 @@ export default function Home() {
   const [error, setError] = useState({ donhang: '', vitien: '' })
   const [reloadLoading, setReloadLoading] = useState(false)
   const [reloadMsg, setReloadMsg] = useState('')
+
+  // CSV states
+  const [csvFile, setCsvFile] = useState(null)
+  const [csvProcessing, setCsvProcessing] = useState(false)
+  const [csvResult, setCsvResult] = useState(null)
+  const [csvError, setCsvError] = useState('')
+  const [csvUploading, setCsvUploading] = useState(false)
+  const [csvUploadMsg, setCsvUploadMsg] = useState('')
+  const csvRef = useRef()
 
   useEffect(() => {
     const p = localStorage.getItem('zalo_pwd')
@@ -66,7 +75,7 @@ export default function Home() {
 
   async function handleReload() {
     setReloadLoading(true)
-    setReloadMsg('')
+    setReloadMsg('⏳ Đang gửi lệnh đến bot...')
     try {
       const res = await fetch('/api/reload', {
         method: 'POST',
@@ -74,22 +83,83 @@ export default function Home() {
         body: JSON.stringify({ password }),
       })
       const result = await res.json()
-      if (res.ok) {
-        setReloadMsg('✅ Đã gửi lệnh! Bot đang tải dữ liệu mới vào bộ nhớ...')
-        setTimeout(() => setReloadMsg(''), 5000)
-      } else {
-        setReloadMsg(`❌ ${result.error}`)
+      if (!res.ok) { setReloadMsg(`❌ ${result.error}`); setReloadLoading(false); return }
+      setReloadMsg('⏳ Bot đang tải dữ liệu mới... vui lòng chờ')
+      const MAX_WAIT = 60, INTERVAL = 2
+      for (let i = 0; i < MAX_WAIT / INTERVAL; i++) {
+        await new Promise(r => setTimeout(r, INTERVAL * 1000))
+        try {
+          const poll = await fetch('/api/reload?poll_status=1')
+          const s = await poll.json()
+          if (s.state === 'success') {
+            setReloadMsg(`✅ Bot đã tải xong! ${s.donhang_count ?? 0} đơn hàng, ${s.vitien_count ?? 0} ví tiền — dữ liệu mới có hiệu lực ngay!`)
+            fetchStatus(); setReloadLoading(false); return
+          }
+          if (s.state === 'error') { setReloadMsg(`❌ Bot báo lỗi: ${s.message}`); setReloadLoading(false); return }
+          if (s.state === 'loading') {
+            const a = s.attempt ? ` (lần ${s.attempt}/${s.max_attempts})` : ''
+            setReloadMsg(`⏳ Bot đang tải dữ liệu từ Vercel...${a}`)
+          } else if (s.state === 'retrying') { setReloadMsg(`🔄 ${s.message}`) }
+        } catch (_) {}
       }
-    } catch (err) {
-      setReloadMsg(`❌ Lỗi: ${err.message}`)
-    }
+      setReloadMsg('⚠️ Chờ quá 60 giây — bot có thể đang bận. Kiểm tra log bot nhé!')
+    } catch (err) { setReloadMsg(`❌ Lỗi kết nối: ${err.message}`) }
     setReloadLoading(false)
+  }
+
+  // CSV handlers
+  async function handleCsvProcess() {
+    if (!csvFile) return
+    setCsvProcessing(true)
+    setCsvError('')
+    setCsvResult(null)
+    setCsvUploadMsg('')
+    try {
+      const text = await csvFile.text()
+      const res = await fetch('/api/process-csv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ csvText: text }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Lỗi xử lý CSV')
+      setCsvResult(data)
+    } catch (e) { setCsvError(e.message) }
+    setCsvProcessing(false)
+  }
+
+  async function handleCsvSendBot() {
+    if (!csvResult) return
+    setCsvUploading(true)
+    setCsvUploadMsg('')
+    setCsvError('')
+    try {
+      const [r1, r2] = await Promise.all([
+        fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password, type: 'donhang', data: csvResult.donhang }),
+        }),
+        fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password, type: 'vitien', data: csvResult.vitien }),
+        }),
+      ])
+      if (!r1.ok || !r2.ok) throw new Error('Upload thất bại, kiểm tra mật khẩu')
+      setCsvUploadMsg('✅ Đã cập nhật lên Bot thành công!')
+      fetchStatus()
+    } catch (e) { setCsvError(e.message) }
+    setCsvUploading(false)
   }
 
   function fmtDate(iso) {
     if (!iso) return 'Chưa có dữ liệu'
     return new Date(iso).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })
   }
+
+  const donhangCount = csvResult ? Object.keys(csvResult.donhang).length : 0
+  const vitienCount = csvResult ? Object.keys(csvResult.vitien).length : 0
 
   if (!authed) {
     return (
@@ -114,11 +184,10 @@ export default function Home() {
           .login-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px 32px; width: 100%; max-width: 380px; text-align: center; backdrop-filter: blur(10px); }
           .logo { font-size: 48px; margin-bottom: 12px; }
           h1 { color: #fff; font-size: 24px; font-weight: 700; margin-bottom: 6px; }
-          .sub { color: rgba(255,255,255,0.5); font-size: 14px; margin-bottom: 28px; }
-          input { width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 14px 16px; color: #fff; font-size: 16px; margin-bottom: 14px; outline: none; transition: border-color 0.2s; }
+          .sub { color: rgba(255,255,255,0.45); font-size: 14px; margin-bottom: 28px; }
+          input { width: 100%; padding: 14px 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: #fff; font-size: 16px; margin-bottom: 14px; outline: none; }
           input:focus { border-color: #5e72e4; }
-          button { width: 100%; background: linear-gradient(135deg, #5e72e4, #825ee4); border: none; border-radius: 12px; padding: 14px; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-          button:hover { opacity: 0.9; }
+          button { width: 100%; padding: 14px; background: linear-gradient(135deg, #5e72e4, #825ee4); border: none; border-radius: 12px; color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; }
         `}</style>
       </>
     )
@@ -131,7 +200,7 @@ export default function Home() {
         <header>
           <div className="header-inner">
             <div className="header-left">
-              <span className="logo">🤖</span>
+              <div className="logo">🤖</div>
               <div><h1>Zalo Bot</h1><p>Quản lý dữ liệu</p></div>
             </div>
             <button className="logout-btn" onClick={handleLogout}>Đăng xuất</button>
@@ -139,32 +208,77 @@ export default function Home() {
         </header>
 
         <main>
-          {/* ── NÚT TẢI DỮ LIỆU VÀO BOT ── */}
+          {/* Reload bot */}
           <div className="reload-card">
             <div className="reload-top">
               <div className="reload-info">
-                <span className="reload-icon">🔄</span>
+                <div className="reload-icon">🔄</div>
                 <div>
                   <h2>Tải dữ liệu vào bot</h2>
                   <p>Bot sẽ đọc toàn bộ đơn hàng & ví tiền, lưu vào bộ nhớ. Khách tra cứu sẽ dùng dữ liệu này.</p>
                 </div>
               </div>
-              <button
-                className={`reload-btn ${reloadLoading ? 'loading' : ''}`}
-                onClick={handleReload}
-                disabled={reloadLoading}
-              >
+              <button className={`reload-btn${reloadLoading ? ' loading' : ''}`} onClick={handleReload} disabled={reloadLoading}>
                 {reloadLoading ? '⏳ Đang gửi...' : '📥 Tải dữ liệu'}
               </button>
             </div>
-            {reloadMsg && (
-              <div className={`reload-msg ${reloadMsg.startsWith('✅') ? 'success' : 'err'}`}>
-                {reloadMsg}
-              </div>
-            )}
+            {reloadMsg && <div className={`reload-msg ${reloadMsg.startsWith('✅') ? 'success' : 'err'}`}>{reloadMsg}</div>}
           </div>
 
-          <div className="divider"><span>Upload file mới</span></div>
+          {/* CSV Import section */}
+          <div className="divider"><span>Import từ Shopee Affiliate</span></div>
+
+          <div className="csv-card">
+            <div className="csv-header">
+              <span className="csv-icon">📊</span>
+              <div>
+                <h2>Import CSV Shopee</h2>
+                <p>Chuyển file báo cáo Shopee Affiliate → tự động tạo dữ liệu đơn hàng & ví tiền</p>
+              </div>
+            </div>
+
+            {/* Chọn file */}
+            <input ref={csvRef} type="file" accept=".csv" style={{ display: 'none' }}
+              onChange={e => { setCsvFile(e.target.files[0]); setCsvResult(null); setCsvUploadMsg(''); setCsvError('') }} />
+
+            <div className="csv-row">
+              <button className="csv-choose-btn" onClick={() => csvRef.current.click()}>
+                📁 Chọn file CSV
+              </button>
+              {csvFile && <span className="csv-filename">✅ {csvFile.name}</span>}
+            </div>
+
+            {/* Kết quả preview */}
+            {csvResult && (
+              <div className="csv-preview">
+                <div className="csv-preview-item">
+                  <span>📦 Đơn hàng</span>
+                  <strong>{donhangCount} sub_id</strong>
+                </div>
+                <div className="csv-preview-item">
+                  <span>💰 Ví tiền</span>
+                  <strong>{vitienCount} sub_id</strong>
+                </div>
+              </div>
+            )}
+
+            {csvError && <div className="csv-err">❌ {csvError}</div>}
+            {csvUploadMsg && <div className="csv-success">{csvUploadMsg}</div>}
+
+            {/* 2 nút */}
+            <div className="csv-btns">
+              <button className="csv-btn-process" onClick={handleCsvProcess}
+                disabled={!csvFile || csvProcessing}>
+                {csvProcessing ? '⏳ Đang xử lý...' : '⚙️ Tạo 2 file JSON'}
+              </button>
+              <button className="csv-btn-send" onClick={handleCsvSendBot}
+                disabled={!csvResult || csvUploading}>
+                {csvUploading ? '⏳ Đang gửi...' : '🚀 Cập nhật lên Bot'}
+              </button>
+            </div>
+          </div>
+
+          <div className="divider"><span>Upload file thủ công</span></div>
 
           <div className="cards">
             <UploadCard icon="🛒" title="Đơn hàng" filename="donhang_by_subid.json" type="donhang"
@@ -178,9 +292,10 @@ export default function Home() {
           <div className="guide">
             <h2>📋 Quy trình mỗi ngày</h2>
             <div className="steps">
-              <div className="step"><span className="num">1</span><span>Upload file <code>donhang_by_subid.json</code> và <code>vitien_by_subid.json</code> mới lên</span></div>
-              <div className="step"><span className="num">2</span><span>Bấm nút <strong>Tải dữ liệu</strong> — bot sẽ đọc và lưu vào bộ nhớ ngay</span></div>
-              <div className="step"><span className="num">3</span><span>Khách nhắn <code>#donhang</code> hoặc <code>#vitien</code> — bot trả dữ liệu đã tải sẵn, nhanh hơn</span></div>
+              <div className="step"><span className="num">1</span><span>Chọn file CSV Shopee Affiliate → bấm <strong>Tạo 2 file JSON</strong></span></div>
+              <div className="step"><span className="num">2</span><span>Kiểm tra số liệu → bấm <strong>Cập nhật lên Bot</strong></span></div>
+              <div className="step"><span className="num">3</span><span>Bấm <strong>Tải dữ liệu</strong> — bot đọc và lưu vào bộ nhớ ngay</span></div>
+              <div className="step"><span className="num">4</span><span>Khách nhắn <code>#donhang</code> hoặc <code>#vitien</code> — bot trả dữ liệu mới nhất</span></div>
             </div>
           </div>
         </main>
@@ -200,7 +315,7 @@ export default function Home() {
         .logout-btn:hover { background: rgba(255,255,255,0.12); }
         main { max-width: 700px; margin: 0 auto; padding: 24px 20px; }
 
-        /* Reload card */
+        /* Reload */
         .reload-card { background: linear-gradient(135deg, rgba(94,114,228,0.15), rgba(130,94,228,0.15)); border: 1px solid rgba(94,114,228,0.4); border-radius: 18px; padding: 20px; margin-bottom: 8px; }
         .reload-top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
         .reload-info { display: flex; align-items: flex-start; gap: 12px; flex: 1; min-width: 0; }
@@ -220,6 +335,29 @@ export default function Home() {
         .divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 16px; }
         .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
         .divider span { font-size: 12px; color: rgba(255,255,255,0.35); white-space: nowrap; }
+
+        /* CSV Card */
+        .csv-card { background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,182,212,0.1)); border: 1px solid rgba(16,185,129,0.35); border-radius: 18px; padding: 20px; }
+        .csv-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+        .csv-icon { font-size: 28px; flex-shrink: 0; }
+        .csv-header h2 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+        .csv-header p { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+        .csv-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+        .csv-choose-btn { background: rgba(255,255,255,0.08); border: 1px dashed rgba(255,255,255,0.25); border-radius: 10px; padding: 11px 18px; color: rgba(255,255,255,0.75); font-size: 14px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .csv-choose-btn:hover { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.45); }
+        .csv-filename { font-size: 13px; color: #6ee7b7; }
+        .csv-preview { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+        .csv-preview-item { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; padding: 10px 16px; display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: rgba(255,255,255,0.6); flex: 1; min-width: 120px; }
+        .csv-preview-item strong { font-size: 18px; font-weight: 700; color: #6ee7b7; }
+        .csv-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+        .csv-btn-process { flex: 1; min-width: 140px; padding: 13px; background: rgba(6,182,212,0.2); border: 1px solid rgba(6,182,212,0.5); border-radius: 12px; color: #67e8f9; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .csv-btn-process:not(:disabled):hover { background: rgba(6,182,212,0.35); }
+        .csv-btn-process:disabled { opacity: 0.4; cursor: not-allowed; }
+        .csv-btn-send { flex: 1; min-width: 140px; padding: 13px; background: linear-gradient(135deg, #10b981, #06b6d4); border: none; border-radius: 12px; color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+        .csv-btn-send:not(:disabled):hover { opacity: 0.88; }
+        .csv-btn-send:disabled { opacity: 0.35; cursor: not-allowed; }
+        .csv-err { background: rgba(255,80,80,0.15); color: #ff8a80; border: 1px solid rgba(255,80,80,0.3); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
+        .csv-success { background: rgba(0,200,83,0.15); color: #69f0ae; border: 1px solid rgba(0,200,83,0.3); border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 12px; }
 
         .cards { display: flex; flex-direction: column; gap: 16px; }
         .guide { margin-top: 28px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; }
