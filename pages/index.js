@@ -474,12 +474,12 @@ export default function Home() {
             <div className="card-title">
               <span className="card-icon">🐾</span>
               <div>
-                <h2>Tải dữ liệu lên Bot ngay</h2>
-                <p>Bấm tải dữ liệu lên bot ngay và đợi tối đa 30 giây để tải lên thành công!</p>
+                <h2>Tải dữ liệu lên Bot</h2>
+                <p>Bấm tải lên bot ngay và đợi tối đa 30 giây để tải lên thành công!</p>
               </div>
             </div>
             <button className={`btn-reload${reloadLoading?' loading':''}`} onClick={handleReload} disabled={reloadLoading || !csvUploadMsg.includes('✅')}>
-              {reloadLoading ? '⏳ Đang gửi...' : '🐾 Tải dữ liệu lên Bot ngay'}
+              {reloadLoading ? '⏳ Đang gửi...' : <span style={{color:'#22c55e',fontWeight:700}}>Tải lên Bot ngay ♐️</span>}
             </button>
             {!csvUploadMsg.includes('✅') && !reloadLoading && (
               <div className="msg err" style={{marginTop:10,fontSize:12}}>⚠️ Vui lòng bấm <b>Update Now</b> trước khi tải lên bot!</div>
