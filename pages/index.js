@@ -479,7 +479,7 @@ export default function Home() {
               </div>
             </div>
             <button className={`btn-reload${reloadLoading?' loading':''}`} onClick={handleReload} disabled={reloadLoading || !csvUploadMsg.includes('✅')}>
-              {reloadLoading ? '⏳ Đang gửi...' : <span style={{color:'#22c55e',fontWeight:700}}>Tải lên Bot ngay ♐️</span>}
+              {reloadLoading ? '⏳ Đang gửi...' : <span style={{color:'#fff',fontWeight:700}}>Tải lên Bot ngay ♐️</span>}
             </button>
             {!csvUploadMsg.includes('✅') && !reloadLoading && (
               <div className="msg err" style={{marginTop:10,fontSize:12}}>⚠️ Vui lòng bấm <b>Update Now</b> trước khi tải lên bot!</div>
@@ -551,7 +551,7 @@ export default function Home() {
         .btn-update{flex:1;min-width:130px;padding:12px;background:linear-gradient(135deg,#5ab0e0,#2d7cc7);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 2px 8px rgba(45,124,199,.28)}
         .btn-update:not(:disabled):hover{opacity:.88}
         .btn-update:disabled{opacity:.35;cursor:not-allowed}
-        .btn-reload{width:100%;padding:13px;background:linear-gradient(135deg,#4a9fd0,#2d7cc7);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 2px 8px rgba(74,159,208,.28)}
+        .btn-reload{width:100%;padding:13px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;box-shadow:0 2px 8px rgba(34,197,94,.28)}
         .btn-reload:not(:disabled):hover{opacity:.88}
         .btn-reload:disabled{opacity:.5;cursor:not-allowed}
         .btn-reload.loading{animation:pulse 1.2s ease-in-out infinite}
