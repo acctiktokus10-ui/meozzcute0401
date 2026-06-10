@@ -385,7 +385,7 @@ export default function Home() {
               {loginLoading ? '⏳ Đang kiểm tra...' : '✨ Đăng nhập'}
             </button>
           </form>
-          <p className="hint-tip">💡 Nhấn vào các nhân vật để chúng nhảy!</p>
+          <p className="hint-tip">📱 Liên hệ Zalo Meozz (0397088175) để lấy pass</p>
         </div>
       </div>
       <style>{`
@@ -429,7 +429,7 @@ export default function Home() {
               <span className="card-icon">🌸</span>
               <div>
                 <h2>Import CSV Shopee Affiliate</h2>
-                <p>Import CSV Shopee Affiliate — nhắn cho Meozz (0397088175) hướng dẫn lấy file CSV nếu bạn chưa biết</p>
+                <p>Nhắn cho Meozz (0397088175) hướng dẫn lấy file CSV nếu bạn chưa biết</p>
               </div>
             </div>
 
@@ -437,7 +437,7 @@ export default function Home() {
               onChange={e => { setCsvFile(e.target.files[0]); setCsvResult(null); setCsvUploadMsg(''); setCsvError('') }} />
 
             <div className="file-row">
-              <button className="btn-choose" onClick={() => csvRef.current.click()}>📁 Chọn file CSV</button>
+              <button className="btn-choose btn-choose-highlight" onClick={() => csvRef.current.click()}>📁 Chọn file CSV</button>
               {csvFile
                 ? <span className="file-name">✅ {csvFile.name}</span>
                 : <span className="file-hint">Chưa chọn file</span>}
@@ -475,12 +475,15 @@ export default function Home() {
               <span className="card-icon">🐾</span>
               <div>
                 <h2>Tải dữ liệu lên Bot ngay</h2>
-                <p>Bot đọc dữ liệu mới từ Redis vào bộ nhớ — khách tra cứu sẽ nhận kết quả mới nhất</p>
+                <p>Bấm tải dữ liệu lên bot ngay và đợi tối đa 30 giây để tải lên thành công!</p>
               </div>
             </div>
-            <button className={`btn-reload${reloadLoading?' loading':''}`} onClick={handleReload} disabled={reloadLoading}>
+            <button className={`btn-reload${reloadLoading?' loading':''}`} onClick={handleReload} disabled={reloadLoading || !csvUploadMsg.includes('✅')}>
               {reloadLoading ? '⏳ Đang gửi...' : '🐾 Tải dữ liệu lên Bot ngay'}
             </button>
+            {!csvUploadMsg.includes('✅') && !reloadLoading && (
+              <div className="msg err" style={{marginTop:10,fontSize:12}}>⚠️ Vui lòng bấm <b>Update Now</b> trước khi tải lên bot!</div>
+            )}
             {reloadMsg && <div className={`msg ${reloadMsg.startsWith('✅')?'ok':'err'}`}>{reloadMsg}</div>}
           </div>
 
@@ -531,6 +534,8 @@ export default function Home() {
         .file-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
         .btn-choose{background:#f0f8ff;border:1.5px dashed #b8d4f0;border-radius:10px;padding:10px 18px;color:#2d7cc7;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap}
         .btn-choose:hover{background:#ddeeff;border-color:#5ab0e0}
+        .btn-choose-highlight{background:linear-gradient(135deg,#e0f2ff,#c8e8f8);border:2px solid #4a9fd0;color:#1a6fb5;font-weight:700;box-shadow:0 0 0 3px rgba(74,159,208,0.18),0 2px 8px rgba(74,159,208,0.18);animation:choosePulse 2s ease-in-out infinite}
+        @keyframes choosePulse{0%,100%{box-shadow:0 0 0 3px rgba(74,159,208,0.18),0 2px 8px rgba(74,159,208,0.15)}50%{box-shadow:0 0 0 6px rgba(74,159,208,0.28),0 2px 12px rgba(74,159,208,0.28)}}
         .file-name{font-size:13px;color:#059669;font-weight:500}
         .file-hint{font-size:13px;color:#94a3b8}
 
